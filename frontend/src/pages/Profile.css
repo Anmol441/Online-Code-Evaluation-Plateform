@@ -1,0 +1,18 @@
+.profile-page { padding: 2rem 0; min-height: calc(100vh - 80px); }
+.profile-container { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); overflow: hidden; }
+.profile-header { display: flex; align-items: center; gap: 2rem; padding: 2rem; border-bottom: 1px solid #e2e8f0; }
+.profile-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+.profile-info { flex: 1; }
+.profile-info h1 { margin: 0 0 0.5rem 0; color: #1a202c; }
+.profile-info p { display: flex; align-items: center; gap: 0.5rem; color: #718096; margin: 0.25rem 0; }
+.role-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.85rem; font-weight: 600; background: #e2e8f0; color: #4a5568; }
+.role-badge.admin { background: #fbd38d; color: #7c2d12; }
+.edit-actions { display: flex; gap: 0.5rem; }
+.name-input { font-size: 1.5rem; font-weight: 600; border: 2px solid #667eea; border-radius: 8px; padding: 0.5rem; }
+.profile-content { padding: 2rem; }
+.bio-section, .stats-section { margin-bottom: 2rem; }
+.bio-section h3, .stats-section h3 { color: #1a202c; margin-bottom: 1rem; }
+.bio-section textarea { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; resize: vertical; }
+.stats-grid-profile { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.stat-item { background: #f7fafc; padding: 1rem; border-radius: 8px; }
+@media (max-width: 768px) { .profile-header { flex-direction: column; text-align: center; } }
