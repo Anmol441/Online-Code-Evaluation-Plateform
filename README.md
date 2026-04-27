@@ -146,8 +146,7 @@ MEMORY_LIMIT=256m
 DOCKER_CLEANUP_ENABLED=true
 
 # Admin
-ADMIN_EMAIL=admin@codeplatform.com
-ADMIN_PASSWORD=Admin@123
+sorry
 ```
 
 ### 4. Gmail Setup for Email OTP
