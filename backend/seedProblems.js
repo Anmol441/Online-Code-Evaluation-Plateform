@@ -3,308 +3,352 @@ const mongoose = require('mongoose');
 const Problem = require('./models/Problem');
 const connectDB = require('./config/database');
 
-const sampleProblems = [
-  {
-    title: 'Two Sum',
-    description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+/* ================= SLUG ================= */
 
-You may assume that each input would have exactly one solution, and you may not use the same element twice.
+const generateSlug = (title, index) =>
+  title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + index;
 
-You can return the answer in any order.
+/* ================= NORMALIZERS ================= */
 
-Example 1:
-Input: nums = [2,7,11,15], target = 9
-Output: [0,1]
-Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
+const normalizeDifficulty = (d) => {
+  if (!d) return "Easy";
+  const val = d.charAt(0).toUpperCase() + d.slice(1).toLowerCase();
+  return ["Easy", "Medium", "Hard"].includes(val) ? val : "Easy";
+};
 
-Example 2:
-Input: nums = [3,2,4], target = 6
-Output: [1,2]
+/* Convert sampleInput/sampleOutput → testCases */
+const normalizeTestCases = (p) => {
+  if (p.testCases && Array.isArray(p.testCases)) return p.testCases;
 
-Example 3:
-Input: nums = [3,3], target = 6
-Output: [0,1]`,
-    difficulty: 'Easy',
-    tags: ['Array', 'Hash Table'],
-    constraints: '2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.',
-    inputFormat: 'First line contains space-separated integers (array)\nSecond line contains target integer',
-    outputFormat: 'Two space-separated integers representing indices',
-    testCases: [
+  if (p.sampleInput && p.sampleOutput) {
+    return [
       {
-        input: '2 7 11 15\n9',
-        output: '0 1',
+        input: p.sampleInput,
+        output: p.sampleOutput,
         isSample: true,
-        explanation: 'nums[0] + nums[1] = 2 + 7 = 9'
       },
-      {
-        input: '3 2 4\n6',
-        output: '1 2',
-        isSample: true
-      },
-      {
-        input: '3 3\n6',
-        output: '0 1',
-        isSample: false
-      },
-      {
-        input: '1 5 3 7 9\n12',
-        output: '2 4',
-        isSample: false
-      }
-    ],
-    timeLimit: 2000,
-    memoryLimit: 256,
-    hints: [
-      'Use a hash map to store numbers and their indices',
-      'For each number, check if (target - number) exists in the hash map'
-    ],
-    companies: ['Amazon', 'Google', 'Microsoft'],
-    isActive: true
-  },
-  {
-    title: 'Palindrome Number',
-    description: `Given an integer x, return true if x is a palindrome, and false otherwise.
-
-Example 1:
-Input: x = 121
-Output: true
-Explanation: 121 reads as 121 from left to right and from right to left.
-
-Example 2:
-Input: x = -121
-Output: false
-Explanation: From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.
-
-Example 3:
-Input: x = 10
-Output: false
-Explanation: Reads 01 from right to left. Therefore it is not a palindrome.`,
-    difficulty: 'Easy',
-    tags: ['Math'],
-    constraints: '-2^31 <= x <= 2^31 - 1',
-    inputFormat: 'Single integer x',
-    outputFormat: 'true or false',
-    testCases: [
-      {
-        input: '121',
-        output: 'true',
-        isSample: true
-      },
-      {
-        input: '-121',
-        output: 'false',
-        isSample: true
-      },
-      {
-        input: '10',
-        output: 'false',
-        isSample: false
-      },
-      {
-        input: '12321',
-        output: 'true',
-        isSample: false
-      }
-    ],
-    timeLimit: 2000,
-    memoryLimit: 256,
-    hints: [
-      'Negative numbers are not palindromes',
-      'Reverse the number and compare with original'
-    ],
-    companies: ['Facebook', 'Apple'],
-    isActive: true
-  },
-  {
-    title: 'Merge Two Sorted Lists',
-    description: `You are given the heads of two sorted linked lists list1 and list2.
-
-Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.
-
-Return the head of the merged linked list.
-
-Example 1:
-Input: list1 = [1,2,4], list2 = [1,3,4]
-Output: [1,1,2,3,4,4]
-
-Example 2:
-Input: list1 = [], list2 = []
-Output: []
-
-Example 3:
-Input: list1 = [], list2 = [0]
-Output: [0]`,
-    difficulty: 'Medium',
-    tags: ['Linked List', 'Recursion'],
-    constraints: 'The number of nodes in both lists is in the range [0, 50].\n-100 <= Node.val <= 100\nBoth list1 and list2 are sorted in non-decreasing order.',
-    inputFormat: 'First line: space-separated integers for list1\nSecond line: space-separated integers for list2',
-    outputFormat: 'Space-separated integers representing merged list',
-    testCases: [
-      {
-        input: '1 2 4\n1 3 4',
-        output: '1 1 2 3 4 4',
-        isSample: true
-      },
-      {
-        input: '\n',
-        output: '',
-        isSample: true
-      },
-      {
-        input: '\n0',
-        output: '0',
-        isSample: false
-      },
-      {
-        input: '1 3 5\n2 4 6',
-        output: '1 2 3 4 5 6',
-        isSample: false
-      }
-    ],
-    timeLimit: 3000,
-    memoryLimit: 256,
-    hints: [
-      'Use a dummy head node to simplify edge cases',
-      'Compare values and add smaller node to result'
-    ],
-    companies: ['Amazon', 'Microsoft', 'Apple'],
-    isActive: true
-  },
-  {
-    title: 'Binary Tree Maximum Path Sum',
-    description: `A path in a binary tree is a sequence of nodes where each pair of adjacent nodes in the sequence has an edge connecting them. A node can only appear in the sequence at most once. Note that the path does not need to pass through the root.
-
-The path sum of a path is the sum of the node's values in the path.
-
-Given the root of a binary tree, return the maximum path sum of any non-empty path.
-
-Example 1:
-Input: root = [1,2,3]
-Output: 6
-Explanation: The optimal path is 2 -> 1 -> 3 with a path sum of 2 + 1 + 3 = 6.
-
-Example 2:
-Input: root = [-10,9,20,null,null,15,7]
-Output: 42
-Explanation: The optimal path is 15 -> 20 -> 7 with a path sum of 15 + 20 + 7 = 42.`,
-    difficulty: 'Hard',
-    tags: ['Tree', 'Depth-First Search', 'Dynamic Programming'],
-    constraints: 'The number of nodes in the tree is in the range [1, 3 * 10^4].\n-1000 <= Node.val <= 1000',
-    inputFormat: 'Level-order traversal of binary tree (null for empty nodes)',
-    outputFormat: 'Maximum path sum as integer',
-    testCases: [
-      {
-        input: '1 2 3',
-        output: '6',
-        isSample: true
-      },
-      {
-        input: '-10 9 20 null null 15 7',
-        output: '42',
-        isSample: true
-      },
-      {
-        input: '-3',
-        output: '-3',
-        isSample: false
-      },
-      {
-        input: '5 4 8 11 null 13 4 7 2 null null null 1',
-        output: '48',
-        isSample: false
-      }
-    ],
-    timeLimit: 5000,
-    memoryLimit: 512,
-    hints: [
-      'For each node, calculate max path sum that includes that node',
-      'Use recursion to calculate max gain from left and right subtrees',
-      'Update global maximum at each node'
-    ],
-    companies: ['Google', 'Facebook', 'Amazon'],
-    isActive: true
-  },
-  {
-    title: 'Valid Parentheses',
-    description: `Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
-
-An input string is valid if:
-1. Open brackets must be closed by the same type of brackets.
-2. Open brackets must be closed in the correct order.
-3. Every close bracket has a corresponding open bracket of the same type.
-
-Example 1:
-Input: s = "()"
-Output: true
-
-Example 2:
-Input: s = "()[]{}"
-Output: true
-
-Example 3:
-Input: s = "(]"
-Output: false`,
-    difficulty: 'Easy',
-    tags: ['String', 'Stack'],
-    constraints: '1 <= s.length <= 10^4\ns consists of parentheses only \'()[]{}\'.',
-    inputFormat: 'String containing parentheses',
-    outputFormat: 'true or false',
-    testCases: [
-      {
-        input: '()',
-        output: 'true',
-        isSample: true
-      },
-      {
-        input: '()[]{}',
-        output: 'true',
-        isSample: true
-      },
-      {
-        input: '(]',
-        output: 'false',
-        isSample: false
-      },
-      {
-        input: '([)]',
-        output: 'false',
-        isSample: false
-      },
-      {
-        input: '{[]}',
-        output: 'true',
-        isSample: false
-      }
-    ],
-    timeLimit: 2000,
-    memoryLimit: 256,
-    hints: [
-      'Use a stack data structure',
-      'Push opening brackets, pop when closing bracket matches'
-    ],
-    companies: ['Amazon', 'Microsoft', 'Bloomberg'],
-    isActive: true
+    ];
   }
+
+  return [];
+};
+
+/* ================= YOUR DATA (UNCHANGED) ================= */
+
+const sampleProblems = [
+
+/* ================= EASY ================= */
+
+{
+  title: 'Two Sum',
+  description: 'Find indices of two numbers that add up to target.',
+  difficulty: 'Easy',
+  tags: ['Array'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'Array + target',
+  outputFormat: 'Indices',
+  testCases: [{ input: '2 7 11 15\n9', output: '0 1', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Use hashmap'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+{
+  title: 'Palindrome Number',
+  description: 'Check if number is palindrome.',
+  difficulty: 'Easy',
+  tags: ['Math'],
+  constraints: '-2^31 <= x <= 2^31-1',
+  inputFormat: 'Number',
+  outputFormat: 'true/false',
+  testCases: [{ input: '121', output: 'true', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Reverse'],
+  companies: ['Google'],
+  isActive: true
+},
+
+{
+  title: 'Reverse String',
+  description: 'Reverse a string.',
+  difficulty: 'Easy',
+  tags: ['String'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'String',
+  outputFormat: 'Reversed',
+  testCases: [{ input: 'hello', output: 'olleh', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['Two pointer'],
+  companies: ['Google'],
+  isActive: true
+},
+
+{
+  title: 'Valid Parentheses',
+  description: 'Check valid parentheses.',
+  difficulty: 'Easy',
+  tags: ['Stack'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'String',
+  outputFormat: 'true/false',
+  testCases: [{ input: '()', output: 'true', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Stack'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+{
+  title: 'Factorial',
+  description: 'Find factorial of number.',
+  difficulty: 'Easy',
+  tags: ['Math'],
+  constraints: '0 <= n <= 20',
+  inputFormat: 'n',
+  outputFormat: 'n!',
+  testCases: [{ input: '5', output: '120', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['Loop'],
+  companies: ['TCS'],
+  isActive: true
+},
+
+{
+  title: 'Fibonacci Number',
+  description: 'Find nth Fibonacci.',
+  difficulty: 'Easy',
+  tags: ['DP'],
+  constraints: '0 <= n <= 30',
+  inputFormat: 'n',
+  outputFormat: 'fib(n)',
+  testCases: [{ input: '6', output: '8', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['DP'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+{
+  title: 'Binary Search',
+  description: 'Find element index.',
+  difficulty: 'Easy',
+  tags: ['Binary Search'],
+  constraints: 'Sorted array',
+  inputFormat: 'Array + target',
+  outputFormat: 'Index',
+  testCases: [{ input: '1 2 3 4 5\n3', output: '2', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['Divide'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+{
+  title: 'Maximum Element',
+  description: 'Find max element.',
+  difficulty: 'Easy',
+  tags: ['Array'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'Array',
+  outputFormat: 'Max',
+  testCases: [{ input: '1 5 3 9', output: '9', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['Loop'],
+  companies: ['TCS'],
+  isActive: true
+},
+
+{
+  title: 'Count Vowels',
+  description: 'Count vowels in string.',
+  difficulty: 'Easy',
+  tags: ['String'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'String',
+  outputFormat: 'Count',
+  testCases: [{ input: 'hello', output: '2', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['Check vowels'],
+  companies: ['Wipro'],
+  isActive: true
+},
+
+{
+  title: 'Check Prime',
+  description: 'Check if number is prime.',
+  difficulty: 'Easy',
+  tags: ['Math'],
+  constraints: '1 <= n <= 10^6',
+  inputFormat: 'Number',
+  outputFormat: 'true/false',
+  testCases: [{ input: '7', output: 'true', isSample: true }],
+  timeLimit: 1000,
+  memoryLimit: 128,
+  hints: ['sqrt'],
+  companies: ['Infosys'],
+  isActive: true
+},
+
+/* ================= MEDIUM ================= */
+
+{
+  title: 'Longest Substring Without Repeating Characters',
+  description: 'Find longest substring without repetition.',
+  difficulty: 'Medium',
+  tags: ['String'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'String',
+  outputFormat: 'Length',
+  testCases: [{ input: 'abcabcbb', output: '3', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Sliding window'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+{
+  title: 'Maximum Subarray',
+  description: 'Find max subarray sum.',
+  difficulty: 'Medium',
+  tags: ['Array'],
+  constraints: 'No constraints',
+  inputFormat: 'Array',
+  outputFormat: 'Sum',
+  testCases: [{ input: '-2 1 -3 4 -1 2 1', output: '6', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Kadane'],
+  companies: ['Google'],
+  isActive: true
+},
+
+{
+  title: 'Rotate Array',
+  description: 'Rotate array by k.',
+  difficulty: 'Medium',
+  tags: ['Array'],
+  constraints: 'No constraints',
+  inputFormat: 'Array + k',
+  outputFormat: 'Rotated',
+  testCases: [{ input: '1 2 3 4 5\n2', output: '4 5 1 2 3', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Reverse'],
+  companies: ['Google'],
+  isActive: true
+},
+
+{
+  title: 'Product of Array Except Self',
+  description: 'Return product array.',
+  difficulty: 'Medium',
+  tags: ['Array'],
+  constraints: 'No constraints',
+  inputFormat: 'Array',
+  outputFormat: 'Array',
+  testCases: [{ input: '1 2 3 4', output: '24 12 8 6', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Prefix'],
+  companies: ['Facebook'],
+  isActive: true
+},
+
+{
+  title: 'House Robber',
+  description: 'Max money without adjacent.',
+  difficulty: 'Medium',
+  tags: ['DP'],
+  constraints: 'No constraints',
+  inputFormat: 'Array',
+  outputFormat: 'Max',
+  testCases: [{ input: '2 7 9 3 1', output: '12', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['DP'],
+  companies: ['Amazon'],
+  isActive: true
+},
+
+/* ================= HARD ================= */
+
+{
+  title: 'Binary Tree Maximum Path Sum',
+  description: 'Find max path sum in tree.',
+  difficulty: 'Hard',
+  tags: ['Tree'],
+  constraints: 'No constraints',
+  inputFormat: 'Tree',
+  outputFormat: 'Sum',
+  testCases: [{ input: '1 2 3', output: '6', isSample: true }],
+  timeLimit: 5000,
+  memoryLimit: 512,
+  hints: ['DFS'],
+  companies: ['Google'],
+  isActive: true
+},
+
+{
+  title: 'Trapping Rain Water',
+  description: 'Calculate trapped water.',
+  difficulty: 'Hard',
+  tags: ['Array'],
+  constraints: '1 <= n <= 10^5',
+  inputFormat: 'Array',
+  outputFormat: 'Integer',
+  testCases: [{ input: '0 1 0 2 1 0 1 3 2 1 2 1', output: '6', isSample: true }],
+  timeLimit: 2000,
+  memoryLimit: 256,
+  hints: ['Two pointers'],
+  companies: ['Google'],
+  isActive: true
+}
+
 ];
+
+/* ================= SEED ================= */
 
 const seedProblems = async () => {
   try {
     await connectDB();
-    
+
     console.log('Clearing existing problems...');
     await Problem.deleteMany({});
-    
+
     console.log('Inserting sample problems...');
-    const problems = await Problem.insertMany(sampleProblems);
-    
-    console.log(`✅ Successfully created ${problems.length} sample problems:`);
-    problems.forEach(p => {
-      console.log(`   - ${p.title} (${p.difficulty})`);
-    });
-    
+
+    const problemsWithSlug = sampleProblems.map((p, i) => ({
+      ...p,
+
+      difficulty: normalizeDifficulty(p.difficulty),
+
+      constraints: p.constraints || "No constraints specified",
+      inputFormat: p.inputFormat || "Standard input",
+      outputFormat: p.outputFormat || "Standard output",
+
+      testCases: normalizeTestCases(p),
+
+      slug: generateSlug(p.title || "problem", i)
+    }));
+
+    const problems = await Problem.insertMany(problemsWithSlug);
+
+    console.log(`✅ Created ${problems.length} problems`);
     process.exit(0);
+
   } catch (error) {
-    console.error('❌ Error seeding problems:', error);
+    console.error('❌ Error:', error.message);
     process.exit(1);
   }
 };

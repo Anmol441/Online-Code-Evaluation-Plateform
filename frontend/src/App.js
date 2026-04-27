@@ -27,6 +27,9 @@ import AddProblem from './pages/AddProblem';
 import LearningHub from './pages/LearningHub';
 
 import './App.css';
+import About from './pages/About';
+import ContactUS from './pages/ContactUS';
+import { Contact } from 'lucide-react';
 
 function App() {
   return (
@@ -44,6 +47,9 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/problems" element={<Problems />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/about" element={<About/>} />
+            <Route path="/contact" element={<ContactUS/>} />
+
 
             {/* Protected Routes */}
             <Route

@@ -328,7 +328,8 @@ const Home = () => {
         </div>
       </section>
       <div class="footer">
-        <p>&copy; 2026 Anmol Tiwari | All Rights Reserved CopyRight 2026</p>
+        
+             © {new Date().getFullYear()} CodeEval Platform • Built for Developers
         
     </div>
     </div>

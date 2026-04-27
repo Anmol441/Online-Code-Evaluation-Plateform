@@ -18,31 +18,20 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const [tips, setTips] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboard();
-    fetchTips();
   }, []);
 
   const fetchDashboard = async () => {
     try {
       const response = await usersAPI.getDashboard();
-      setStats(response?.data?.data || null);
+      setStats(response?.data?.data || {});
     } catch (error) {
       toast.error('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTips = async () => {
-    try {
-      const response = await usersAPI.getTips();
-      setTips(response?.data?.data || []);
-    } catch (error) {
-      console.error('Failed to fetch tips');
     }
   };
 
@@ -54,17 +43,22 @@ const Dashboard = () => {
     );
   }
 
-  if (!stats) {
-    return (
-      <div className="container">
-        <div className="loading">No dashboard data available</div>
-      </div>
-    );
-  }
+  // Safe fallback
+  const safeStats = stats || {};
 
-  // SAFE language data
-  const languageData = stats?.languageStats
-    ? Object.entries(stats.languageStats)
+  const totalSolved =
+    (safeStats?.statistics?.easy || 0) +
+    (safeStats?.statistics?.medium || 0) +
+    (safeStats?.statistics?.hard || 0);
+
+  const difficultyData = [
+    { name: 'Easy', value: safeStats?.statistics?.easy || 0, color: '#48bb78' },
+    { name: 'Medium', value: safeStats?.statistics?.medium || 0, color: '#ed8936' },
+    { name: 'Hard', value: safeStats?.statistics?.hard || 0, color: '#f56565' }
+  ];
+
+  const languageData = safeStats?.languageStats
+    ? Object.entries(safeStats.languageStats)
         .filter(([_, count]) => count > 0)
         .map(([lang, count]) => ({
           name: lang.toUpperCase(),
@@ -72,92 +66,61 @@ const Dashboard = () => {
         }))
     : [];
 
-  // SAFE difficulty data
-  const difficultyData = [
-    { name: 'Easy', value: stats?.statistics?.easy || 0, color: '#48bb78' },
-    { name: 'Medium', value: stats?.statistics?.medium || 0, color: '#ed8936' },
-    { name: 'Hard', value: stats?.statistics?.hard || 0, color: '#f56565' }
-  ];
-
   return (
     <div className="dashboard-page">
       <div className="container">
+
+        {/* Header */}
         <div className="page-header">
-          <h1 className="page-title">My Dashboard</h1>
-          <p className="page-subtitle">
-            Track your progress and achievements
-          </p>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Track your coding performance</p>
         </div>
 
-        {/* Stats Overview */}
+        {/* Stats */}
         <div className="stats-grid">
           <div className="stat-card primary">
-            <div className="stat-icon">
-              <Trophy />
-            </div>
+            <Trophy />
             <div>
-              <div className="stat-value">
-                {stats?.totalScore || 0}
-              </div>
-              <div className="stat-label">Total Score</div>
+              <h2>{safeStats.totalScore || 0}</h2>
+              <p>Total Score</p>
             </div>
           </div>
 
           <div className="stat-card success">
-            <div className="stat-icon">
-              <Code2 />
-            </div>
+            <Code2 />
             <div>
-              <div className="stat-value">
-                {(stats?.statistics?.easy || 0) +
-                  (stats?.statistics?.medium || 0) +
-                  (stats?.statistics?.hard || 0)}
-              </div>
-              <div className="stat-label">Problems Solved</div>
+              <h2>{totalSolved}</h2>
+              <p>Problems Solved</p>
             </div>
           </div>
 
           <div className="stat-card info">
-            <div className="stat-icon">
-              <TrendingUp />
-            </div>
+            <TrendingUp />
             <div>
-              <div className="stat-value">
-                {stats?.successRate || 0}%
-              </div>
-              <div className="stat-label">Success Rate</div>
+              <h2>{safeStats.successRate || 0}%</h2>
+              <p>Success Rate</p>
             </div>
           </div>
 
           <div className="stat-card warning">
-            <div className="stat-icon">
-              <Flame />
-            </div>
+            <Flame />
             <div>
-              <div className="stat-value">
-                {stats?.streakData?.currentStreak || 0}
-              </div>
-              <div className="stat-label">Day Streak 🔥</div>
+              <h2>{safeStats?.streakData?.currentStreak || 0}</h2>
+              <p>Streak 🔥</p>
             </div>
           </div>
         </div>
 
         {/* Charts */}
         <div className="charts-row">
+
           <div className="chart-card">
-            <h3>Problems by Difficulty</h3>
+            <h3>Difficulty Breakdown</h3>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie
-                  data={difficultyData}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {difficultyData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
+                <Pie data={difficultyData} dataKey="value">
+                  {difficultyData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -167,13 +130,13 @@ const Dashboard = () => {
 
           {languageData.length > 0 && (
             <div className="chart-card">
-              <h3>Language Usage</h3>
+              <h3>Languages Used</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={languageData}>
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#667eea" />
+                  <Bar dataKey="value" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -184,71 +147,51 @@ const Dashboard = () => {
         <div className="submissions-section">
           <div className="section-header">
             <h2>Recent Submissions</h2>
-            <Link to="/submissions" className="view-all">
-              View All →
-            </Link>
+            <Link to="/submissions">View All</Link>
           </div>
 
           <div className="submissions-list">
-            {stats?.recentSubmissions?.length > 0 ? (
-              stats.recentSubmissions
-                .filter(
-                  (submission) =>
-                    submission &&
-                    submission._id &&
-                    submission.problemId &&
-                    submission.problemId._id
-                )
-                .slice(0, 5)
-                .map((submission) => (
-                  <div
-                    key={submission._id}
-                    className="submission-item"
-                  >
-                    <div className="submission-info">
-                      <Link
-                        to={`/problems/${submission.problemId._id}`}
-                        className="problem-name"
-                      >
-                        {submission.problemId.title}
-                      </Link>
+            {(safeStats?.recentSubmissions || [])
+              .filter((s) => s && s.problemId) // ✅ IMPORTANT FIX
+              .slice(0, 5)
+              .map((submission) => (
+                <div key={submission._id} className="submission-item">
 
-                      <span
-                        className={`badge badge-${submission.problemId.difficulty?.toLowerCase()}`}
-                      >
-                        {submission.problemId.difficulty}
-                      </span>
-                    </div>
+                  <div className="submission-info">
+                    <Link
+                      to={`/problems/${submission.problemId?._id}`}
+                      className="problem-name"
+                    >
+                      {submission.problemId?.title || 'Unknown Problem'}
+                    </Link>
 
-                    <div className="submission-details">
-                      <span
-                        className={`verdict verdict-${submission.verdict
-                          ?.replace(/ /g, '-')
-                          .toLowerCase()}`}
-                      >
-                        {submission.verdict}
-                      </span>
-
-                      <span className="language">
-                        {submission.language?.toUpperCase()}
-                      </span>
-
-                      <span className="time">
-                        <Clock size={14} />
-                        {submission.createdAt
-                          ? new Date(
-                              submission.createdAt
-                            ).toLocaleDateString()
-                          : ''}
-                      </span>
-                    </div>
+                    <span className="badge">
+                      {submission.problemId?.difficulty || 'N/A'}
+                    </span>
                   </div>
-                ))
-            ) : (
-              <p>No recent submissions</p>
-            )}
+
+                  <div className="submission-details">
+                    <span className={`verdict ${submission.verdict?.toLowerCase()}`}>
+                      {submission.verdict}
+                    </span>
+
+                    <span className="language">
+                      {submission.language?.toUpperCase()}
+                    </span>
+
+                    <span className="time">
+                      <Clock size={14} />
+                      {submission.createdAt
+                        ? new Date(submission.createdAt).toLocaleDateString()
+                        : ''}
+                    </span>
+                  </div>
+
+                </div>
+              ))}
           </div>
         </div>
+
       </div>
     </div>
   );

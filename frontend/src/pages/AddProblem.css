@@ -48,6 +48,8 @@
   margin-bottom: 0.5rem;
 }
 
+.add-problem-page{
+
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -58,6 +60,7 @@
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.3s;
+}
 }
 
 .form-group input:focus,

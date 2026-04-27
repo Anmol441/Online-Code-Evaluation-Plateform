@@ -301,3 +301,64 @@ exports.getPersonalizedTips = async (req, res) => {
     });
   }
 };
+
+// @desc    Get leaderboard
+// @route   GET /api/users/leaderboard
+// @access  Public
+
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const { difficulty, limit = 50 } = req.query;
+
+    // ✅ IMPORTANT: Exclude admin users
+    let users = await User.find({
+      role: 'user',           // 🔥 THIS FIXES YOUR ISSUE
+      isBlocked: false,
+      isVerified: true
+    }).select('name totalScore statistics');
+
+    // 🧠 Calculate solved count based on difficulty
+    users = users.map(user => {
+      let solved = 0;
+
+      if (difficulty === 'Easy') {
+        solved = user.statistics.easy;
+      } else if (difficulty === 'Medium') {
+        solved = user.statistics.medium;
+      } else if (difficulty === 'Hard') {
+        solved = user.statistics.hard;
+      } else {
+        solved =
+          user.statistics.easy +
+          user.statistics.medium +
+          user.statistics.hard;
+      }
+
+      return {
+        ...user._doc,
+        solved
+      };
+    });
+
+    // 🔥 Sort by score
+    users.sort((a, b) => b.totalScore - a.totalScore);
+
+    // 🏆 Add rank
+    users = users.map((user, index) => ({
+      ...user,
+      rank: index + 1
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: users.slice(0, limit)
+    });
+
+  } catch (error) {
+    console.error('Leaderboard Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch leaderboard'
+    });
+  }
+};

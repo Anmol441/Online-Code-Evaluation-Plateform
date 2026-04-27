@@ -22,6 +22,8 @@ const Navbar = () => {
         </Link>
 
         <div className="navbar-links">
+          <Link to="/about" className="nav-link">About Us</Link>
+          <Link to="/contact" className="nav-link">Contact Us</Link>
           <Link to="/problems" className="nav-link">Problems</Link>
           <Link to="/leaderboard" className="nav-link">
             <Trophy size={18} />

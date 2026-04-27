@@ -1077,6 +1077,7 @@ Implement both iterative and recursive versions of binary search.
           </div>
         )}
       </div>
+      
     </div>
   );
 };

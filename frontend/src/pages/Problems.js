@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { problemsAPI } from '../services/api';
 import { toast } from 'react-toastify';
-import { Code2, Search, TrendingUp, CheckCircle } from 'lucide-react';
+import { Code2, Search, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Problems.css';
 
 const Problems = () => {
@@ -11,10 +12,10 @@ const Problems = () => {
   const [filters, setFilters] = useState({
     difficulty: '',
     search: '',
-    tag: '',
     sort: '-createdAt'
   });
-  const [stats, setStats] = useState(null);
+
+  const { user } = useAuth();
 
   const fetchProblems = useCallback(async () => {
     try {
@@ -31,16 +32,15 @@ const Problems = () => {
     fetchProblems();
   }, [fetchProblems]);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this problem?')) return;
 
-  const fetchStats = async () => {
     try {
-      const response = await problemsAPI.getStats();
-      setStats(response.data.data);
-    } catch (error) {
-      console.error('Failed to fetch stats');
+      await problemsAPI.delete(id);
+      toast.success('Deleted successfully');
+      fetchProblems();
+    } catch {
+      toast.error('Delete failed');
     }
   };
 
@@ -48,147 +48,76 @@ const Problems = () => {
     setFilters({ ...filters, [key]: value });
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Easy': return '#48bb78';
-      case 'Medium': return '#ed8936';
-      case 'Hard': return '#f56565';
-      default: return '#718096';
-    }
+  const getDifficultyClass = (difficulty) => {
+    return `badge ${difficulty.toLowerCase()}`;
   };
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="loading">Loading problems...</div>
-      </div>
-    );
-  }
+  if (loading) return <div className="loading">Loading...</div>;
 
   return (
-    <div className="problems-page">
-      <div className="container">
-        {/* Header */}
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">
-              <Code2 size={40} />
-              Practice Problems
-            </h1>
-            <p className="page-subtitle">Solve coding challenges and improve your skills</p>
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        {stats && (
-          <div className="stats-overview">
-            <div className="stat-box">
-              <div className="stat-icon">
-                <Code2 size={24} />
-              </div>
-              <div>
-                <div className="stat-value">{stats.total}</div>
-                <div className="stat-label">Total Problems</div>
-              </div>
-            </div>
-            {stats.byDifficulty.map((item) => (
-              <div key={item._id} className="stat-box">
-                <div className="stat-icon" style={{ background: getDifficultyColor(item._id) }}>
-                  <TrendingUp size={24} />
-                </div>
-                <div>
-                  <div className="stat-value">{item.count}</div>
-                  <div className="stat-label">{item._id}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="filters-section">
-          <div className="search-box">
-            <Search size={20} />
-            <input
-              type="text"
-              placeholder="Search problems..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-            />
-          </div>
-
-          <select
-            value={filters.difficulty}
-            onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-          >
-            <option value="">All Difficulties</option>
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
-
-          <select
-            value={filters.sort}
-            onChange={(e) => handleFilterChange('sort', e.target.value)}
-          >
-            <option value="-createdAt">Newest First</option>
-            <option value="createdAt">Oldest First</option>
-            <option value="title">Title (A-Z)</option>
-            <option value="-title">Title (Z-A)</option>
-            <option value="-acceptanceRate">Acceptance Rate</option>
-          </select>
-        </div>
-
-        {/* Problems List */}
-        <div className="problems-list">
-          {problems.length === 0 ? (
-            <div className="no-problems">
-              <Code2 size={48} />
-              <p>No problems found</p>
-            </div>
-          ) : (
-            problems.map((problem) => (
-              <Link 
-                to={`/problems/${problem._id}`} 
-                key={problem._id} 
-                className="problem-card"
-              >
-                <div className="problem-header">
-                  <h3 className="problem-title">{problem.title}</h3>
-                  <span 
-                    className="difficulty-badge"
-                    style={{ background: getDifficultyColor(problem.difficulty) }}
-                  >
-                    {problem.difficulty}
-                  </span>
-                </div>
-
-                <p className="problem-description">
-                  {problem.description.substring(0, 150)}...
-                </p>
-
-                <div className="problem-footer">
-                  <div className="problem-tags">
-                    {problem.tags.slice(0, 3).map((tag, index) => (
-                      <span key={index} className="tag">{tag}</span>
-                    ))}
-                  </div>
-
-                  <div className="problem-stats">
-                    <span className="acceptance-rate">
-                      <CheckCircle size={16} />
-                      {problem.acceptanceRate || 0}% Acceptance
-                    </span>
-                    <span className="submissions">
-                      {problem.totalSubmissions || 0} Submissions
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
+    <div className="problems-container">
+      
+      <div className="header">
+        <h1><Code2 size={32} /> Problems</h1>
       </div>
+
+      {/* Filters */}
+      <div className="filters">
+        <div className="search-box">
+          <Search size={18} />
+          <input
+            type="text"
+            placeholder="Search problems..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+          />
+        </div>
+
+        <select onChange={(e) => handleFilterChange('difficulty', e.target.value)}>
+          <option value="">All</option>
+          <option>Easy</option>
+          <option>Medium</option>
+          <option>Hard</option>
+        </select>
+      </div>
+
+      {/* Problems Grid */}
+      <div className="grid">
+        {problems.map((p) => (
+          <div className="card" key={p._id}>
+            
+            <Link to={`/problems/${p._id}`} className="card-link">
+              <div className="card-header">
+                <h3>{p.title}</h3>
+                <span className={getDifficultyClass(p.difficulty)}>
+                  {p.difficulty}
+                </span>
+              </div>
+
+              <p className="desc">
+                {p.description.substring(0, 100)}...
+              </p>
+            </Link>
+
+            <div className="card-footer">
+              <span className="acceptance">
+                {p.acceptanceRate || 0}% Accepted
+              </span>
+
+              {user?.role === 'admin' && (
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDelete(p._id)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };
