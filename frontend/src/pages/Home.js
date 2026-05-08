@@ -18,8 +18,7 @@ import {
   Star,
   Shield,
   Cpu,
-  Globe,
-  Lightbulb
+  
 } from 'lucide-react';
 import './Home.css';
 
