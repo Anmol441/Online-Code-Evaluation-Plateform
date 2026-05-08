@@ -117,7 +117,10 @@ connectDB();
 // CORS
 // ======================
 app.use(cors({
-  origin: '*',
+  origin: [
+    'http://localhost:3000',
+    'https://online-code-evaluation-platform.vercel.app'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
