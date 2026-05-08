@@ -22,7 +22,7 @@ const Navbar = () => {
     user,
     logout,
     isAuthenticated,
-    isAdmin
+   
   } = useAuth();
 
   const navigate = useNavigate();
