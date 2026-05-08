@@ -25,6 +25,7 @@ exports.register = async (req, res) => {
 
     // Check if user exists
     const userExists = await User.findOne({ email });
+
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -34,7 +35,11 @@ exports.register = async (req, res) => {
 
     // Generate OTP
     const otp = generateOTP();
-    const otpExpire = new Date(Date.now() + parseInt(process.env.OTP_EXPIRE_MINUTES || 10) * 60 * 1000);
+
+    const otpExpire = new Date(
+      Date.now() +
+      parseInt(process.env.OTP_EXPIRE_MINUTES || 10) * 60 * 1000
+    );
 
     // Create user
     const user = await User.create({
@@ -45,20 +50,45 @@ exports.register = async (req, res) => {
       otpExpire
     });
 
-    // Send verification email
-    await sendVerificationEmail(email, otp, name);
+    console.log('User registered successfully');
+    console.log('Generated OTP:', otp);
 
+    // Send verification email
+    let emailSent = false;
+
+    try {
+      await sendVerificationEmail(email, otp, name);
+
+      emailSent = true;
+
+      console.log('Verification email sent successfully');
+
+    } catch (emailError) {
+
+      console.log('EMAIL ERROR:', emailError.message);
+
+      logger.error(`Email sending error: ${emailError.message}`);
+    }
+
+    // Success response
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Please check your email for OTP verification.',
+      message: emailSent
+        ? 'Registration successful! Please check your email for OTP verification.'
+        : 'Account created successfully, but OTP email could not be sent. Please use resend OTP.',
       data: {
         email: user.email,
-        name: user.name
+        name: user.name,
+        isVerified: user.isVerified
       }
     });
 
   } catch (error) {
+
+    console.log('REGISTER ERROR:', error.message);
+
     logger.error(`Registration error: ${error.message}`);
+
     res.status(500).json({
       success: false,
       message: 'Server error during registration'
