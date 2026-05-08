@@ -17,12 +17,17 @@ const Login = () => {
   const navigate = useNavigate();
 
   // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
+ const { user } = useAuth();
+
+useEffect(() => {
+  if (isAuthenticated && user) {
+    if (user.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
-
+  }
+}, [isAuthenticated, user, navigate]);
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -47,7 +52,16 @@ const Login = () => {
         toast.success(response.data.message);
         
         // Call login - this will update user state
-        login(response.data.data, response.data.token);
+        const userData = response.data.data;
+
+login(userData, response.data.token);
+
+// 🔥 ROLE BASED REDIRECT
+if (userData.role === 'admin') {
+  navigate('/admin', { replace: true });
+} else {
+  navigate('/dashboard', { replace: true });
+}
         
         // The useEffect hook will handle the redirect when isAuthenticated becomes true
       }
@@ -82,7 +96,7 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
-                placeholder="your.email@example.com"
+                placeholder="Please Enter your email"
                 value={formData.email}
                 onChange={handleChange}
                 required

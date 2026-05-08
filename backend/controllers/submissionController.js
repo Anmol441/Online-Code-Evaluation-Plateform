@@ -4,6 +4,7 @@ const User = require('../models/User');
 const codeExecutor = require('../utils/codeExecutor');
 const logger = require('../utils/logger');
 
+
 // @desc    Submit code
 // @route   POST /api/submissions
 // @access  Private
@@ -18,7 +19,6 @@ exports.submitCode = async (req, res) => {
       });
     }
 
-    // Get problem with all test cases
     const problem = await Problem.findById(problemId);
 
     if (!problem) {
@@ -28,7 +28,6 @@ exports.submitCode = async (req, res) => {
       });
     }
 
-    // Create submission
     const submission = await Submission.create({
       userId: req.user.id,
       problemId,
@@ -38,7 +37,6 @@ exports.submitCode = async (req, res) => {
       verdict: 'Pending'
     });
 
-    // Execute code against test cases
     let passedCount = 0;
     let totalExecutionTime = 0;
     const testCaseResults = [];
@@ -47,7 +45,7 @@ exports.submitCode = async (req, res) => {
 
     for (let i = 0; i < problem.testCases.length; i++) {
       const testCase = problem.testCases[i];
-      
+
       const result = await codeExecutor.executeCode(
         code,
         language,
@@ -56,7 +54,7 @@ exports.submitCode = async (req, res) => {
         `${problem.memoryLimit}m`
       );
 
-      totalExecutionTime += result.executionTime;
+      totalExecutionTime += result.executionTime || 0;
 
       const testCaseResult = {
         testCaseId: testCase._id,
@@ -64,23 +62,19 @@ exports.submitCode = async (req, res) => {
         input: testCase.isSample ? testCase.input : '[Hidden]',
         expectedOutput: testCase.isSample ? testCase.output : '[Hidden]',
         actualOutput: result.output || '',
-        executionTime: result.executionTime,
+        executionTime: result.executionTime || 0,
         error: result.error || ''
       };
 
-      // Check if output matches
-      if (result.success && result.output.trim() === testCase.output.trim()) {
+      if (result.success && result.output?.trim() === testCase.output.trim()) {
         testCaseResult.passed = true;
         passedCount++;
       } else {
-        if (result.verdict === 'Time Limit Exceeded') {
+        if (result.error?.toLowerCase().includes('timeout')) {
           finalVerdict = 'Time Limit Exceeded';
           errorMessage = 'Time limit exceeded';
-        } else if (result.verdict === 'Runtime Error') {
+        } else if (result.error) {
           finalVerdict = 'Runtime Error';
-          errorMessage = result.error;
-        } else if (result.verdict === 'Compilation Error') {
-          finalVerdict = 'Compilation Error';
           errorMessage = result.error;
         } else {
           finalVerdict = 'Wrong Answer';
@@ -90,27 +84,22 @@ exports.submitCode = async (req, res) => {
 
       testCaseResults.push(testCaseResult);
 
-      // Stop execution if not accepted
-      if (!testCaseResult.passed && !testCase.isSample) {
-        break;
-      }
+      if (!testCaseResult.passed && !testCase.isSample) break;
     }
 
-    // Update submission
     submission.verdict = finalVerdict;
     submission.testCasesPassed = passedCount;
     submission.executionTime = totalExecutionTime;
     submission.errorMessage = errorMessage;
     submission.testCaseResults = testCaseResults;
 
-    // Calculate score
     if (finalVerdict === 'Accepted') {
       submission.score = problem.points;
     }
 
     await submission.save();
 
-    // Update problem statistics
+    // Update problem stats
     problem.totalSubmissions += 1;
     if (finalVerdict === 'Accepted') {
       problem.acceptedSubmissions += 1;
@@ -118,15 +107,14 @@ exports.submitCode = async (req, res) => {
     problem.updateAcceptanceRate();
     await problem.save();
 
-    // Update user statistics
+    // Update user stats
     const user = await User.findById(req.user.id);
     user.statistics.totalSubmissions += 1;
-    
+
     if (finalVerdict === 'Accepted') {
       user.statistics.acceptedSubmissions += 1;
       user.languageStats[language] = (user.languageStats[language] || 0) + 1;
 
-      // Check if first time solving this problem
       const alreadySolved = user.solvedProblems.some(
         p => p.problemId.toString() === problemId
       );
@@ -141,29 +129,26 @@ exports.submitCode = async (req, res) => {
         user.totalScore += problem.points;
         submission.isFirstAccepted = true;
 
-        // Update streak
         user.updateStreak();
       }
     }
 
     await user.save();
 
-    // Return results
     res.status(200).json({
       success: true,
-      message: finalVerdict === 'Accepted' 
-        ? '🎉 Congratulations! All test cases passed!' 
-        : `❌ ${finalVerdict}`,
-      data: {
-        submissionId: submission._id,
-        verdict: submission.verdict,
-        testCasesPassed: submission.testCasesPassed,
-        totalTestCases: submission.totalTestCases,
-        executionTime: submission.executionTime,
-        score: submission.score,
-        testCaseResults: testCaseResults.slice(0, problem.sampleTestCases), // Show only sample results
-        errorMessage: submission.errorMessage
-      }
+      message:
+        finalVerdict === 'Accepted'
+          ? '🎉 All test cases passed!'
+          : `❌ ${finalVerdict}`,
+      submissionId: submission._id,
+      verdict: submission.verdict,
+      testCasesPassed: submission.testCasesPassed,
+      totalTestCases: submission.totalTestCases,
+      executionTime: submission.executionTime,
+      score: submission.score,
+      testCaseResults: testCaseResults.slice(0, problem.sampleTestCases),
+      errorMessage: submission.errorMessage
     });
 
   } catch (error) {
@@ -175,43 +160,21 @@ exports.submitCode = async (req, res) => {
   }
 };
 
-// @desc    Get user submissions
+
+// @desc    Get logged-in user's submissions
 // @route   GET /api/submissions/my
 // @access  Private
 exports.getMySubmissions = async (req, res) => {
   try {
-    const { page = 1, limit = 20, problemId, verdict } = req.query;
-
-    const query = { userId: req.user.id };
-
-    if (problemId) {
-      query.problemId = problemId;
-    }
-
-    if (verdict) {
-      query.verdict = verdict;
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const submissions = await Submission.find(query)
+    const submissions = await Submission.find({ userId: req.user.id })
       .populate('problemId', 'title difficulty')
-      .sort('-createdAt')
-      .skip(skip)
-      .limit(parseInt(limit))
-      .select('-code -testCaseResults');
-
-    const total = await Submission.countDocuments(query);
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: submissions.length,
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit)),
       data: submissions
     });
-
   } catch (error) {
     logger.error(`Get my submissions error: ${error.message}`);
     res.status(500).json({
@@ -221,14 +184,14 @@ exports.getMySubmissions = async (req, res) => {
   }
 };
 
-// @desc    Get submission by ID
+
+// @desc    Get single submission
 // @route   GET /api/submissions/:id
 // @access  Private
 exports.getSubmission = async (req, res) => {
   try {
     const submission = await Submission.findById(req.params.id)
-      .populate('problemId', 'title difficulty')
-      .populate('userId', 'name');
+      .populate('problemId', 'title difficulty');
 
     if (!submission) {
       return res.status(404).json({
@@ -237,11 +200,13 @@ exports.getSubmission = async (req, res) => {
       });
     }
 
-    // Check if user owns the submission or is admin
-    if (submission.userId._id.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      submission.userId.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to view this submission'
+        message: 'Not authorized'
       });
     }
 
@@ -249,7 +214,6 @@ exports.getSubmission = async (req, res) => {
       success: true,
       data: submission
     });
-
   } catch (error) {
     logger.error(`Get submission error: ${error.message}`);
     res.status(500).json({
@@ -259,43 +223,22 @@ exports.getSubmission = async (req, res) => {
   }
 };
 
+
 // @desc    Get all submissions (Admin)
 // @route   GET /api/submissions/all
-// @access  Private/Admin
+// @access  Admin
 exports.getAllSubmissions = async (req, res) => {
   try {
-    const { page = 1, limit = 50, verdict, userId } = req.query;
-
-    const query = {};
-
-    if (verdict) {
-      query.verdict = verdict;
-    }
-
-    if (userId) {
-      query.userId = userId;
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const submissions = await Submission.find(query)
+    const submissions = await Submission.find()
       .populate('userId', 'name email')
       .populate('problemId', 'title difficulty')
-      .sort('-createdAt')
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Submission.countDocuments(query);
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: submissions.length,
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit)),
       data: submissions
     });
-
   } catch (error) {
     logger.error(`Get all submissions error: ${error.message}`);
     res.status(500).json({

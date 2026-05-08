@@ -37,34 +37,37 @@ const AdminDashboard = () => {
           Add New Problem
         </Link>
       </div>
-
+      <Link to="/admin/add-tutorial" className="btn-primary">
+        + Add Tutorial
+      </Link>
+      
       <div className="stats-grid">
         <div className="stat-card primary">
           <div className="stat-icon"><Users /></div>
           <div>
             <div className="stat-value">{analytics.users.total}</div>
-            <div className="stat-label">Total Users</div>
+            <div className="stat-label" style={{ color: 'black' }}>Total Users</div>
           </div>
         </div>
         <div className="stat-card success">
           <div className="stat-icon"><Code2 /></div>
           <div>
             <div className="stat-value">{analytics.problems.total}</div>
-            <div className="stat-label">Total Problems</div>
+            <div className="stat-label" style={{ color: 'black' }}>Total Problems</div>
           </div>
         </div>
         <div className="stat-card info">
           <div className="stat-icon"><FileText /></div>
           <div>
             <div className="stat-value">{analytics.submissions.total}</div>
-            <div className="stat-label">Total Submissions</div>
+            <div className="stat-label" style={{ color: 'black' }}>Total Submissions</div>
           </div>
         </div>
         <div className="stat-card warning">
           <div className="stat-icon"><TrendingUp /></div>
           <div>
             <div className="stat-value">{analytics.users.active}</div>
-            <div className="stat-label">Active Users</div>
+            <div className="stat-label" style={{ color: 'black' }}>Active Users</div>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ const languageConfig = {
     timeout: 5000
   },
   java: {
-    image: 'openjdk:17-slim',
+    image: 'eclipse-temurin:17',
     extension: 'java',
     compileCmd: (filename) => `javac /app/${filename}`,
     runCmd: (classname) => `java -cp /app ${classname}`,
@@ -49,10 +49,29 @@ class CodeExecutor {
     }
   }
 
+  // ✅ NEW: Ensure image exists before execution
+  async ensureImage(image) {
+    try {
+      await docker.getImage(image).inspect();
+    } catch {
+      logger.info(`Image ${image} not found. Pulling...`);
+      await new Promise((resolve, reject) => {
+        docker.pull(image, (err, stream) => {
+          if (err) return reject(err);
+          docker.modem.followProgress(stream, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      });
+      logger.info(`Image ${image} pulled successfully`);
+    }
+  }
+
   async executeCode(code, language, input, timeLimit = 5000, memoryLimit = '256m') {
     const sessionId = uuidv4();
     const config = languageConfig[language];
-    
+
     if (!config) {
       return {
         success: false,
@@ -65,16 +84,17 @@ class CodeExecutor {
     let startTime = Date.now();
 
     try {
-      // Create temporary directory for this execution
+      // ✅ Ensure Docker image exists
+      await this.ensureImage(config.image);
+
       const sessionDir = path.join(this.tempDir, sessionId);
       await fs.mkdir(sessionDir, { recursive: true });
 
-      // Determine filename and classname
       let filename, classname;
+
       if (language === 'java') {
-        // Extract class name from Java code
         const classMatch = code.match(/public\s+class\s+(\w+)/);
-        classname = classMatch ? classMatch[1] : 'Solution';
+        classname = classMatch ? classMatch[1] : 'Main'; // safer default
         filename = `${classname}.${config.extension}`;
       } else {
         filename = `solution.${config.extension}`;
@@ -83,38 +103,35 @@ class CodeExecutor {
       const filePath = path.join(sessionDir, filename);
       await fs.writeFile(filePath, code);
 
-      // Create input file
       const inputPath = path.join(sessionDir, 'input.txt');
       await fs.writeFile(inputPath, input || '');
 
-      // Create container
       container = await docker.createContainer({
         Image: config.image,
         Cmd: ['/bin/sh'],
         Tty: false,
         OpenStdin: true,
-        StdinOnce: false,
         HostConfig: {
           Binds: [`${sessionDir}:/app`],
           Memory: this.parseMemoryLimit(memoryLimit),
           NetworkMode: 'none',
-          AutoRemove: false
+          AutoRemove: true // ✅ auto cleanup container
         },
         WorkingDir: '/app'
       });
 
       await container.start();
 
-      // Compilation step (if needed)
+      // 🔹 Compile step
       if (config.compileCmd) {
-        const compileCmd = typeof config.compileCmd === 'function' 
-          ? config.compileCmd(filename) 
+        const compileCmd = typeof config.compileCmd === 'function'
+          ? config.compileCmd(filename)
           : config.compileCmd;
-        
+
         const compileResult = await this.execInContainer(container, compileCmd);
-        
+
         if (compileResult.exitCode !== 0) {
-          await this.cleanup(container, sessionDir);
+          await this.cleanup(null, sessionDir);
           return {
             success: false,
             error: compileResult.stderr || 'Compilation failed',
@@ -124,21 +141,20 @@ class CodeExecutor {
         }
       }
 
-      // Execution step
+      // 🔹 Run step
       let runCmd = config.runCmd;
       if (typeof runCmd === 'function') {
         runCmd = language === 'java' ? runCmd(classname) : runCmd(filename);
       }
 
       const execResult = await this.execInContainer(
-        container, 
+        container,
         `${runCmd} < /app/input.txt`,
         timeLimit
       );
 
       const executionTime = Date.now() - startTime;
 
-      // Determine verdict
       let verdict = 'Accepted';
       let output = execResult.stdout;
       let error = '';
@@ -151,7 +167,7 @@ class CodeExecutor {
         error = execResult.stderr || 'Runtime error occurred';
       }
 
-      await this.cleanup(container, sessionDir);
+      await this.cleanup(null, sessionDir);
 
       return {
         success: verdict === 'Accepted',
@@ -164,14 +180,6 @@ class CodeExecutor {
 
     } catch (error) {
       logger.error(`Code execution error: ${error.message}`);
-      
-      if (container) {
-        try {
-          await container.remove({ force: true });
-        } catch (e) {
-          logger.error(`Container cleanup error: ${e.message}`);
-        }
-      }
 
       return {
         success: false,
@@ -209,15 +217,9 @@ class CodeExecutor {
 
         stream.on('data', (chunk) => {
           const str = chunk.toString('utf8');
-          // Docker multiplexes stdout/stderr in the stream
-          // First byte indicates the stream type
-          if (chunk[0] === 1) {
-            stdout += str.substring(8);
-          } else if (chunk[0] === 2) {
-            stderr += str.substring(8);
-          } else {
-            stdout += str;
-          }
+          if (chunk[0] === 1) stdout += str.substring(8);
+          else if (chunk[0] === 2) stderr += str.substring(8);
+          else stdout += str;
         });
 
         stream.on('end', async () => {
@@ -235,32 +237,34 @@ class CodeExecutor {
 
       } catch (error) {
         clearTimeout(timeoutHandle);
-        if (!timedOut) {
-          resolve({
-            exitCode: -1,
-            stdout: '',
-            stderr: error.message,
-            timeout: false
-          });
-        }
+        resolve({
+          exitCode: -1,
+          stdout: '',
+          stderr: error.message,
+          timeout: false
+        });
       }
     });
   }
 
   parseMemoryLimit(limit) {
     const match = limit.match(/^(\d+)(m|g)?$/i);
-    if (!match) return 256 * 1024 * 1024; // Default 256MB
-    
+    if (!match) return 256 * 1024 * 1024;
+
     const value = parseInt(match[1]);
     const unit = (match[2] || 'm').toLowerCase();
-    
-    return unit === 'g' ? value * 1024 * 1024 * 1024 : value * 1024 * 1024;
+
+    return unit === 'g'
+      ? value * 1024 * 1024 * 1024
+      : value * 1024 * 1024;
   }
 
   async cleanup(container, sessionDir) {
     try {
-      await container.stop({ t: 1 });
-      await container.remove();
+      if (container) {
+        await container.stop({ t: 1 });
+        await container.remove();
+      }
     } catch (error) {
       logger.error(`Container cleanup error: ${error.message}`);
     }
@@ -269,32 +273,6 @@ class CodeExecutor {
       await fs.rm(sessionDir, { recursive: true, force: true });
     } catch (error) {
       logger.error(`Directory cleanup error: ${error.message}`);
-    }
-  }
-
-  async pullImages() {
-    const images = Object.values(languageConfig).map(config => config.image);
-    const uniqueImages = [...new Set(images)];
-
-    logger.info('Pulling Docker images...');
-    
-    for (const image of uniqueImages) {
-      try {
-        logger.info(`Pulling ${image}...`);
-        await new Promise((resolve, reject) => {
-          docker.pull(image, (err, stream) => {
-            if (err) return reject(err);
-            
-            docker.modem.followProgress(stream, (err, output) => {
-              if (err) return reject(err);
-              resolve(output);
-            });
-          });
-        });
-        logger.info(`Successfully pulled ${image}`);
-      } catch (error) {
-        logger.error(`Failed to pull ${image}: ${error.message}`);
-      }
     }
   }
 }

@@ -1,17 +1,53 @@
 import React, { useState } from "react";
 
 const Contact = () => {
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     message: ""
   });
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Message sent successfully 🚀");
-    setForm({ name: "", email: "", message: "" });
+
+    try {
+
+      const response = await fetch(
+        'http://localhost:5000/api/contact',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json'
+          },
+
+          body: JSON.stringify(form)
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+
+        alert('Message sent successfully 🚀');
+
+        setForm({
+          name: '',
+          email: '',
+          message: ''
+        });
+
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      alert('Something went wrong');
+    }
   };
+
 
   return (
     <>
@@ -46,7 +82,6 @@ const Contact = () => {
           box-shadow: 0 20px 40px rgba(0,0,0,0.08);
         }
 
-        /* LEFT SIDE */
         .contact-left {
           background: #6366f1;
           color: white;
@@ -77,7 +112,6 @@ const Contact = () => {
           opacity: 0.8;
         }
 
-        /* RIGHT SIDE */
         .contact-right {
           padding: 3rem;
         }
@@ -102,12 +136,6 @@ const Contact = () => {
           font-size: 0.95rem;
         }
 
-        .input-group input:focus,
-        .input-group textarea:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
-        }
-
         .input-group textarea {
           height: 120px;
           resize: none;
@@ -122,12 +150,6 @@ const Contact = () => {
           color: white;
           font-weight: 600;
           cursor: pointer;
-          transition: 0.3s;
-        }
-
-        .submit-btn:hover {
-          background: #4f46e5;
-          transform: translateY(-2px);
         }
 
         .footer {
@@ -137,25 +159,25 @@ const Contact = () => {
           font-size: 0.85rem;
         }
 
-        /* RESPONSIVE */
         @media(max-width: 768px){
           .contact-card {
             grid-template-columns: 1fr;
           }
-
-          .contact-left {
-            text-align: center;
-          }
         }
       `}</style>
 
+
       <div className="contact-wrapper">
+
         <div className="contact-card">
 
-          {/* LEFT */}
           <div className="contact-left">
+
             <h1>Contact Us</h1>
-            <p>We’re here to help you with anything related to CodeEval.</p>
+
+            <p>
+              We’re here to help you with anything related to CodeEval.
+            </p>
 
             <div className="info">
               <strong>Email</strong>
@@ -171,51 +193,78 @@ const Contact = () => {
               <strong>Location</strong>
               India
             </div>
+
           </div>
 
-          {/* RIGHT */}
+
           <div className="contact-right">
+
             <h2>Send Message</h2>
 
             <form onSubmit={handleSubmit}>
+
               <div className="input-group">
                 <input
                   type="text"
                   placeholder="Your Name"
                   value={form.name}
-                  onChange={(e) => setForm({...form, name: e.target.value})}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      name: e.target.value
+                    })
+                  }
                   required
                 />
               </div>
+
 
               <div className="input-group">
                 <input
                   type="email"
                   placeholder="Your Email"
                   value={form.email}
-                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      email: e.target.value
+                    })
+                  }
                   required
                 />
               </div>
+
 
               <div className="input-group">
                 <textarea
                   placeholder="Your Message"
                   value={form.message}
-                  onChange={(e) => setForm({...form, message: e.target.value})}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      message: e.target.value
+                    })
+                  }
                   required
                 />
               </div>
 
-              <button className="submit-btn">Send Message</button>
+
+              <button className="submit-btn">
+                Send Message
+              </button>
+
             </form>
+
 
             <div className="footer">
               © {new Date().getFullYear()} CodeEval Platform
             </div>
+
           </div>
 
         </div>
+
       </div>
     </>
   );

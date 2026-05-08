@@ -4,124 +4,76 @@ const cors = require('cors');
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
-const logger = require('./utils/logger');
-const codeExecutor = require('./utils/codeExecutor');
-const User = require('./models/User');
-const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const path = require('path');
 
-// Create logs directory if it doesn't exist
-const logDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
-}
-
-// Initialize express app
 const app = express();
 
-// Connect to database
+// =====================
+// DB CONNECTION
+// =====================
 connectDB();
 
-// Middleware
-app.use(cors());
+// =====================
+// CORS CONFIG
+// =====================
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+// =====================
+// BODY PARSER (ONLY ONCE)
+// =====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply rate limiting to all routes
+// =====================
+// RATE LIMIT
+// =====================
 app.use('/api', apiLimiter);
 
-// Routes
+// =====================
+// ROUTES
+// =====================
+app.use('/api/tutorials', require('./routes/tutorialRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/problems', require('./routes/problemRoutes'));
 app.use('/api/submissions', require('./routes/submissionRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/contact', require('./routes/contactRoutes'));
 
-// Health check route
+// =====================
+// HEALTH CHECK
+// =====================
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ message: 'Server running' });
 });
 
-// Root route
+// =====================
+// ROOT TEST
+// =====================
 app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Welcome to Code Evaluation Platform API',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      problems: '/api/problems',
-      submissions: '/api/submissions',
-      users: '/api/users',
-      admin: '/api/admin'
-    }
-  });
+  res.send('API WORKING');
 });
 
-// Error handler middleware (must be last)
+// =====================
+// ERROR HANDLER
+// =====================
 app.use(errorHandler);
 
-// Create default admin user
-const createDefaultAdmin = async () => {
-  try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@codeplatform.com';
-    const adminExists = await User.findOne({ email: adminEmail });
-
-    if (!adminExists) {
-      await User.create({
-        name: 'Admin',
-        email: adminEmail,
-        password: process.env.ADMIN_PASSWORD || 'Admin@123',
-        role: 'admin',
-        isVerified: true
-      });
-      logger.info('Default admin user created');
-    }
-  } catch (error) {
-    logger.error(`Create admin error: ${error.message}`);
-  }
-};
-
-// Pull Docker images on startup
-const initializeDocker = async () => {
-  try {
-    logger.info('Initializing Docker images...');
-    await codeExecutor.pullImages();
-    logger.info('Docker images ready');
-  } catch (error) {
-    logger.error(`Docker initialization error: ${error.message}`);
-    logger.warn('Code execution may not work properly without Docker images');
-  }
-};
-
-// Start server
+// =====================
+// START SERVER
+// =====================
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, async () => {
-  logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  
-  // Initialize on startup
-  await createDefaultAdmin();
-  
-  // Uncomment below to pull Docker images on startup (takes time)
-  // await initializeDocker();
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  logger.error(`Unhandled Rejection: ${err.message}`);
-  server.close(() => process.exit(1));
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  logger.error(`Uncaught Exception: ${err.message}`);
-  process.exit(1);
-});
-
-module.exports = app;

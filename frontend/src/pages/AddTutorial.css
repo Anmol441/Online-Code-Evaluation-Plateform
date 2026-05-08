@@ -1,0 +1,96 @@
+/* PAGE BACKGROUND */
+.add-tutorial-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* CARD */
+.add-tutorial-card {
+  width: 100%;
+  max-width: 700px;
+  padding: 2.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* TITLE */
+.form-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* FORM */
+.tutorial-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* ROW (2 inputs side by side) */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row input {
+  flex: 1;
+}
+
+/* INPUTS + TEXTAREA */
+.add-tutorial-page input,
+.add-tutorial-page textarea {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+  font-size: 0.95rem;
+  transition: 0.3s;
+  width: 100%;
+}
+
+/* FOCUS EFFECT */
+.add-tutorial-page input:focus,
+.add-tutorial-page textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+}
+
+/* BUTTON */
+.submit-btn {
+  margin-top: 1rem;
+  padding: 0.95rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}

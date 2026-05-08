@@ -21,18 +21,57 @@ const VerifyEmail = () => {
     return null;
   }
 
-  const handleChange = (index, value) => {
-    if (value.length > 1) {
-      value = value[0];
+  // 🔥 Internal Styles (No functionality change)
+  const styles = {
+    otpContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '12px',
+      margin: '25px 0'
+    },
+    otpInput: {
+      width: '50px',
+      height: '55px',
+      textAlign: 'center',
+      fontSize: '22px',
+      fontWeight: 'bold',
+      borderRadius: '10px',
+      border: '2px solid #ddd',
+      outline: 'none',
+      transition: 'all 0.2s ease',
+      background: '#f9fafb'
+    },
+    button: {
+      width: '100%',
+      padding: '12px',
+      borderRadius: '10px',
+      border: 'none',
+      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+      color: '#fff',
+      fontSize: '16px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      marginTop: '15px',
+      transition: '0.3s'
+    },
+    resendBtn: {
+      marginTop: '10px',
+      background: 'none',
+      border: 'none',
+      color: '#667eea',
+      cursor: 'pointer',
+      fontWeight: '500'
     }
+  };
 
+  const handleChange = (index, value) => {
+    if (value.length > 1) value = value[0];
     if (!/^\d*$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -121,7 +160,8 @@ const VerifyEmail = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="otp-inputs">
+          {/* 🔥 Styled OTP Inputs */}
+          <div style={styles.otpContainer}>
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -129,8 +169,16 @@ const VerifyEmail = () => {
                 type="text"
                 inputMode="numeric"
                 maxLength={1}
-                className="otp-input"
                 value={digit}
+                style={styles.otpInput}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid #667eea';
+                  e.target.style.boxShadow = '0 0 8px rgba(102,126,234,0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '2px solid #ddd';
+                  e.target.style.boxShadow = 'none';
+                }}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
@@ -139,14 +187,14 @@ const VerifyEmail = () => {
             ))}
           </div>
 
-          <button type="submit" className="auth-button" disabled={loading}>
+          <button type="submit" style={styles.button} disabled={loading}>
             {loading ? 'Verifying...' : 'Verify Email'}
           </button>
         </form>
 
         <div className="resend-otp">
           <p>Didn't receive the code?</p>
-          <button onClick={handleResendOTP} disabled={resending}>
+          <button onClick={handleResendOTP} style={styles.resendBtn} disabled={resending}>
             {resending ? 'Sending...' : 'Resend OTP'}
           </button>
         </div>

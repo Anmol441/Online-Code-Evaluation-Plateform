@@ -135,8 +135,17 @@ const Dashboard = () => {
                 <BarChart data={languageData}>
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" />
+                  <Tooltip contentStyle={{
+              backgroundColor: "#1e293b",
+              border: "none",
+              borderRadius: "8px",
+              color: "#fff"
+            }}/>
+                  <Bar  
+            dataKey="value"
+            fill="#3b82f6"   // ✅ Blue bars
+            
+           />
                 </BarChart>
               </ResponsiveContainer>
             </div>

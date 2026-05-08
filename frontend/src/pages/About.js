@@ -20,12 +20,12 @@ const About = () => {
         /* HERO */
         .hero {
           text-align: center;
-          padding: 5rem 2rem;
+          padding: 6rem 2rem;
           background: radial-gradient(circle at top, #1e293b, #020617);
         }
 
         .hero h1 {
-          font-size: 3rem;
+          font-size: 3.2rem;
           font-weight: 800;
           background: linear-gradient(90deg, #6366f1, #22c55e);
           -webkit-background-clip: text;
@@ -35,7 +35,9 @@ const About = () => {
         .hero p {
           margin-top: 1rem;
           color: #94a3b8;
-          font-size: 1.1rem;
+          font-size: 1.15rem;
+          max-width: 700px;
+          margin-inline: auto;
         }
 
         /* SECTION */
@@ -47,55 +49,66 @@ const About = () => {
 
         .section-title {
           text-align: center;
-          font-size: 2rem;
+          font-size: 2.2rem;
           font-weight: 700;
-          margin-bottom: 2rem;
+          margin-bottom: 2.5rem;
         }
 
         /* GRID */
         .grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 1.8rem;
         }
 
         /* CARD */
         .card {
           background: #1e293b;
           padding: 2rem;
-          border-radius: 16px;
+          border-radius: 18px;
           transition: 0.3s;
-          border: 1px solid transparent;
+          border: 1px solid rgba(255,255,255,0.05);
         }
 
         .card:hover {
-          transform: translateY(-8px);
+          transform: translateY(-10px);
           border-color: #6366f1;
-          box-shadow: 0 10px 30px rgba(99,102,241,0.2);
+          box-shadow: 0 15px 35px rgba(99,102,241,0.25);
         }
 
         .card h3 {
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.6rem;
           color: #6366f1;
         }
 
         .card p {
           color: #cbd5f5;
           font-size: 0.95rem;
+          line-height: 1.5;
+        }
+
+        /* ABOUT TEXT */
+        .about-text {
+          text-align: center;
+          max-width: 800px;
+          margin: auto;
+          color: #94a3b8;
+          line-height: 1.7;
+          font-size: 1.05rem;
         }
 
         /* STATS */
         .stats {
           display: flex;
           justify-content: space-around;
-          text-align: center;
           flex-wrap: wrap;
           gap: 2rem;
+          text-align: center;
         }
 
         .stat {
-          font-size: 2rem;
-          font-weight: 700;
+          font-size: 2.2rem;
+          font-weight: 800;
           color: #22c55e;
         }
 
@@ -107,13 +120,18 @@ const About = () => {
         /* CTA */
         .cta {
           text-align: center;
-          padding: 4rem 2rem;
+          padding: 5rem 2rem;
+        }
+
+        .cta h2 {
+          font-size: 2rem;
         }
 
         .cta button {
+          margin-top: 1.5rem;
           background: linear-gradient(90deg, #6366f1, #22c55e);
           border: none;
-          padding: 0.9rem 2rem;
+          padding: 1rem 2.5rem;
           border-radius: 50px;
           color: white;
           font-weight: 600;
@@ -122,7 +140,8 @@ const About = () => {
         }
 
         .cta button:hover {
-          transform: scale(1.05);
+          transform: scale(1.07);
+          box-shadow: 0 10px 25px rgba(99,102,241,0.3);
         }
 
         /* FOOTER */
@@ -133,9 +152,8 @@ const About = () => {
           font-size: 0.9rem;
         }
 
-        /* RESPONSIVE */
         @media(max-width:768px){
-          .hero h1 { font-size: 2.2rem; }
+          .hero h1 { font-size: 2.4rem; }
         }
       `}</style>
 
@@ -143,57 +161,69 @@ const About = () => {
 
         {/* HERO */}
         <section className="hero">
-          <h1>About CodeEval Platform</h1>
+          <h1>About CodeEval</h1>
           <p>
-            A powerful online coding evaluation platform to learn, practice, and excel in programming.
+            CodeEval is a modern coding platform designed to help developers practice,
+            evaluate, and improve their programming skills through real-world challenges
+            and instant feedback.
+          </p>
+        </section>
+
+        {/* ABOUT DESCRIPTION */}
+        <section className="section">
+          <p className="about-text">
+            Our platform bridges the gap between learning and real-world coding by providing
+            an interactive environment where users can write, execute, and test their code.
+            With a focus on performance, scalability, and user experience, CodeEval empowers
+            students and developers to grow efficiently.
           </p>
         </section>
 
         {/* FEATURES */}
         <section className="section">
-          <h2 className="section-title">What We Offer</h2>
+          <h2 className="section-title">Core Features</h2>
 
           <div className="grid">
             <div className="card">
-              <h3>💻 Real Coding Environment</h3>
-              <p>Write, compile, and run code in multiple languages instantly.</p>
+              <h3>💻 Code Execution</h3>
+              <p>Run code in multiple languages using a secure container-based system.</p>
             </div>
 
             <div className="card">
-              <h3>📚 Learning Hub</h3>
-              <p>Structured tutorials like top platforms to master concepts.</p>
+              <h3>⚡ Instant Results</h3>
+              <p>Get real-time output and evaluation with optimized performance.</p>
             </div>
 
             <div className="card">
-              <h3>⚡ Instant Evaluation</h3>
-              <p>Automatic judging system with fast and accurate results.</p>
+              <h3>📚 Structured Learning</h3>
+              <p>Access tutorials and curated problems from beginner to advanced.</p>
             </div>
 
             <div className="card">
-              <h3>📊 Performance Tracking</h3>
-              <p>Monitor your growth, submissions, and ranking.</p>
+              <h3>📊 Progress Tracking</h3>
+              <p>Analyze your coding journey with detailed insights and stats.</p>
             </div>
 
             <div className="card">
-              <h3>🧠 Smart Practice</h3>
-              <p>Curated problems from beginner to advanced levels.</p>
+              <h3>🔐 Secure Execution</h3>
+              <p>All code runs inside isolated Docker containers for safety.</p>
             </div>
 
             <div className="card">
-              <h3>🔐 Secure Platform</h3>
-              <p>Reliable and safe environment for coding assessments.</p>
+              <h3>🌍 Scalable System</h3>
+              <p>Built with MERN stack and Docker for high performance.</p>
             </div>
           </div>
         </section>
 
         {/* STATS */}
         <section className="section">
-          <h2 className="section-title">Platform Impact</h2>
+          <h2 className="section-title">Our Impact</h2>
 
           <div className="stats">
             <div>
               <div className="stat">10K+</div>
-              <div className="stat-label">Users</div>
+              <div className="stat-label">Developers</div>
             </div>
             <div>
               <div className="stat">5K+</div>
@@ -212,16 +242,16 @@ const About = () => {
 
         {/* CTA */}
         <section className="cta">
-          <h2>Start Your Coding Journey Today 🚀</h2>
-          <p style={{margin:"1rem 0", color:"#94a3b8"}}>
-            Practice. Learn. Grow.
+          <h2>Start Coding Today 🚀</h2>
+          <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>
+            Improve your skills with real-time coding challenges.
           </p>
-          <button>Get Started</button>
+          <button>Explore Platform</button>
         </section>
 
         {/* FOOTER */}
         <div className="footer">
-          © {new Date().getFullYear()} CodeEval Platform • Built for Developers
+          © {new Date().getFullYear()} CodeEval • Built using MERN & Docker
         </div>
 
       </div>

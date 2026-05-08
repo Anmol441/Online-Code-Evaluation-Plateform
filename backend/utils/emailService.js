@@ -61,7 +61,7 @@ const sendVerificationEmail = async (email, otp, name) => {
           <p>Happy Coding! 🚀</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} Code Platform. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} CodeEval Platform. All rights reserved.</p>
         </div>
       </div>
     </body>

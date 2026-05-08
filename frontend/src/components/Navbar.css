@@ -33,7 +33,7 @@
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.35rem;
 }
 
 .nav-link {
@@ -169,5 +169,79 @@
 
   .nav-link span {
     display: none;
+  }
+}
+
+/* ========================= */
+/* USER NAVBAR IMPROVEMENT */
+/* ========================= */
+
+/* Make fonts bolder */
+.nav-link {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Prevent About/Contact from breaking lines */
+.nav-link,
+.user-button {
+  white-space: nowrap;
+}
+
+/* Better spacing only for normal users */
+@media (max-width: 1200px) {
+
+  .navbar-links {
+    gap: 0.7rem;
+  }
+
+  .nav-link {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.95rem;
+  }
+}
+
+
+/* USER PAGE RESPONSIVE FIX */
+@media (max-width: 992px) {
+
+  .navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .navbar-links {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .nav-link {
+    font-size: 0.92rem;
+  }
+}
+
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+  .navbar-brand span {
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+
+  .navbar-links {
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .user-button {
+    font-weight: 700;
   }
 }

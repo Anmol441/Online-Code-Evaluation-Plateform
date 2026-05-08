@@ -54,198 +54,219 @@ const Profile = () => {
   return (
     <>
       <style>{`
-        body {
-          margin: 0;
-          font-family: 'Inter', sans-serif;
-        }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #0f172a;
+  }
 
-        .profile-page {
-          min-height: 100vh;
-          background: radial-gradient(circle at top, #1e293b, #0f172a);
-          padding: 30px 20px;
-          color: #fff;
-        }
+  .profile-page {
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #f8fafc, #eef2ff);
+    padding: 30px 20px;
+    color: #0f172a;
+  }
 
-        .container {
-          max-width: 1100px;
-          margin: auto;
-        }
+  .container {
+    max-width: 1100px;
+    margin: auto;
+  }
 
-        /* HEADER */
-        .profile-header {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          padding: 25px;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.05);
-          backdrop-filter: blur(15px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
+  /* HEADER */
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 25px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
 
-        .profile-avatar {
-          width: 90px;
-          height: 90px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #22c55e);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
+  .profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #22c55e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 
-        .profile-avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-        .upload-btn {
-          display: block;
-          margin-top: 8px;
-          font-size: 12px;
-          cursor: pointer;
-        }
+  .upload-btn {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #6366f1;
+  }
 
-        .profile-info h2 {
-          margin: 0;
-          font-size: 1.6rem;
-        }
+  /* TEXT */
+  .profile-info h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #0f172a;
+  }
 
-        .profile-info p {
-          color: #cbd5f5;
-          font-size: 0.9rem;
-        }
+  .profile-info p {
+    color: #334155;
+    font-size: 0.9rem;
+  }
 
-        .role {
-          display: inline-block;
-          background: #6366f1;
-          padding: 4px 10px;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          margin-top: 5px;
-        }
+  .role {
+    display: inline-block;
+    background: #6366f1;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    margin-top: 5px;
+  }
 
-        .ranking {
-          margin-top: 6px;
-          color: #facc15;
-          font-weight: 600;
-        }
+  .ranking {
+    margin-top: 6px;
+    color: #eab308;
+    font-weight: 600;
+  }
 
-        .btn {
-          border: none;
-          padding: 8px 14px;
-          border-radius: 8px;
-          cursor: pointer;
-          margin-left: 5px;
-        }
+  /* BUTTON */
+  .btn {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 5px;
+  }
 
-        .btn-primary { background: #6366f1; color: #fff; }
-        .btn-success { background: #22c55e; color: #fff; }
+  .btn-primary { background: #6366f1; color: #fff; }
+  .btn-primary:hover { background: #4f46e5; }
 
-        /* CARD */
-        .card {
-          margin-top: 20px;
-          padding: 20px;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(10px);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-          transition: 0.3s;
-        }
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-success:hover { background: #16a34a; }
 
-        .card:hover {
-          transform: translateY(-3px);
-        }
+  /* CARD */
+  .card {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: 0.3s;
+  }
 
-        /* STATS */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 15px;
-          margin-top: 20px;
-        }
+  .card:hover {
+    transform: translateY(-3px);
+  }
 
-        .stat-box {
-          padding: 20px;
-          border-radius: 12px;
-          text-align: center;
-          background: rgba(255,255,255,0.05);
-          transition: 0.3s;
-        }
+  .card h3 {
+    color: #0f172a;
+  }
 
-        .stat-box:hover {
-          transform: scale(1.05);
-        }
+  .card p {
+    color: #475569;
+  }
 
-        .stat-box.highlight {
-          background: linear-gradient(135deg, #6366f1, #22c55e);
-        }
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+  }
 
-        .stat-box h4 {
-          font-size: 0.9rem;
-          color: #cbd5f5;
-        }
+  .stat-box {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, #6366f1, #22c55e);
+    transition: 0.3s;
+  }
 
-        .stat-box p {
-          font-size: 1.5rem;
-          font-weight: bold;
-        }
+  .stat-box:hover {
+    transform: scale(1.05);
+  }
 
-        /* SKILLS */
-        .skill-bar {
-          margin-top: 15px;
-        }
+  .stat-box h4 {
+    font-size: 0.9rem;
+    color: #475569;
+  }
 
-        .bar {
-          height: 8px;
-          background: #1e293b;
-          border-radius: 10px;
-          overflow: hidden;
-        }
+  .stat-box p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0f172a;
+  }
 
-        .fill {
-          height: 100%;
-        }
+  .stat-box.highlight {
+    background: linear-gradient(135deg, #6366f1, #22c55e);
+    color: white;
+  }
 
-        .fill.easy { background: #22c55e; }
-        .fill.medium { background: #f59e0b; }
-        .fill.hard { background: #ef4444; }
+  .stat-box.highlight h4 {
+    color: #e0e7ff;
+  }
 
-        /* BADGES */
-        .badges {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
+  /* SKILLS */
+  .skill-bar {
+    margin-top: 15px;
+  }
 
-        .badge {
-          background: #1e293b;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 0.85rem;
-        }
+  .bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
 
-        textarea, input {
-          width: 100%;
-          padding: 8px;
-          border-radius: 8px;
-          border: none;
-          margin-top: 8px;
-        }
+  .fill.easy { background: #22c55e; }
+  .fill.medium { background: #f59e0b; }
+  .fill.hard { background: #ef4444; }
 
-        /* MOBILE */
-        @media(max-width:768px){
-          .profile-header {
-            flex-direction: column;
-            text-align: center;
-          }
+  /* BADGES */
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 
-          .stats-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-      `}</style>
+  .badge {
+    background: #e2e8f0;
+    color: #0f172a;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+  }
+
+  /* INPUT */
+  textarea, input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-top: 8px;
+    color: #0f172a;
+  }
+
+  /* MOBILE */
+  @media(max-width:768px){
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+`}</style>
 
       <div className="profile-page">
         <div className="container">
