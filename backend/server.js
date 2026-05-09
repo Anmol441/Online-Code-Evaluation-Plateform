@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
@@ -15,21 +16,33 @@ connectDB();
 // =====================
 // CORS CONFIG
 // =====================
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://online-code-evaluation-plateform-production.up.railway.app/');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://online-code-evaluation-plateform-production.up.railway.app',
+  'https://online-code-evaluation-platform-uldtbxk1k.vercel.app',
+  'https://online-code-evaluation-platform-np8fb7fii.vercel.app'
+];
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
+app.use(cors({
+  origin: function (origin, callback) {
 
-  next();
-});
+    // allow requests with no origin
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // =====================
-// BODY PARSER (ONLY ONCE)
+// BODY PARSER
 // =====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,5 +88,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
